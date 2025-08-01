@@ -4,8 +4,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Player from "./pages/Player";
-import Upload from "./pages/Upload";
-import Admin from "./pages/Admin";
+import SupabaseUpload from "./pages/SupabaseUpload";
+import SupabaseAdmin from "./pages/SupabaseAdmin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -18,8 +18,8 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Player />} />
-          <Route path="/upload" element={<Upload />} />
-          <Route path="/admin" element={<Admin />} />
+          <Route path="/upload" element={<SupabaseUpload />} />
+          <Route path="/admin" element={<SupabaseAdmin />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

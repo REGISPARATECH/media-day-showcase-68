@@ -3,7 +3,7 @@ import { useState, useRef } from "react";
 import Footer from "@/components/layout/Footer";
 import NavigationMenu from "@/components/navigation/NavigationMenu";
 import ThemeToggle from "@/components/layout/ThemeToggle";
-import { useMediaPlayer } from "@/hooks/useMediaPlayer";
+import { useSupabaseMediaPlayer } from "@/hooks/useSupabaseMediaPlayer";
 import { useFullscreen } from "@/hooks/useFullscreen";
 import { MediaRenderer } from "@/components/player/MediaRenderer";
 import { PlayerControls } from "@/components/player/PlayerControls";
@@ -29,7 +29,7 @@ const Player = () => {
   });
 
   // Hooks personalizados
-  const { currentMedia, currentMediaObj, handleMediaEnd } = useMediaPlayer();
+  const { currentMedia, currentMediaObj, loading, handleMediaEnd } = useSupabaseMediaPlayer();
   const { isFullscreen, toggleFullscreen } = useFullscreen();
 
   const togglePortrait = () => {
@@ -72,7 +72,18 @@ const Player = () => {
         <div className={`w-full h-full sm:max-w-6xl sm:aspect-[9/16] bg-card shadow-card rounded-lg overflow-hidden relative ${
           isPortrait ? 'transform rotate-90 origin-center' : ''
         }`}>
-          {currentMedia && currentMediaObj ? (
+          {loading ? (
+            <div className="w-full h-full flex items-center justify-center">
+              <div className="text-center">
+                <h2 className="font-orbitron text-4xl text-primary neon-glow mb-4">
+                  CARREGANDO...
+                </h2>
+                <p className="text-muted-foreground text-xl">
+                  Conectando ao servidor...
+                </p>
+              </div>
+            </div>
+          ) : currentMedia && currentMediaObj ? (
             <MediaRenderer
               media={currentMedia}
               mediaObj={currentMediaObj}

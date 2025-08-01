@@ -7,14 +7,23 @@ export interface Client {
 
 export interface MediaFile {
   id: string;
-  name: string;
-  originalName: string;
-  type: 'image' | 'video';
+  original_name: string;
+  file_name: string;
+  file_type: string;
+  file_size: number;
   folder: string;
-  client: string;
   url: string;
-  size: number;
-  hidden?: boolean;
+  hidden: boolean;
+  animation_type?: string;
+  animation_duration?: number;
+  created_at: string;
+  updated_at: string;
+  // Propriedades computadas para compatibilidade
+  name?: string;
+  originalName?: string;
+  type?: 'image' | 'video';
+  client?: string;
+  size?: number;
   uploadProgress?: number;
   animation?: 'fade' | 'slide-left' | 'slide-right' | 'zoom' | 'rotate' | 'none';
 }

@@ -2,6 +2,19 @@
 import React, { useEffect, useState } from 'react';
 import { MediaFile } from '@/types';
 
+// Função helper para determinar o tipo de mídia
+const getMediaType = (file: MediaFile): 'image' | 'video' => {
+  if (file.type) return file.type;
+  if (file.file_type?.startsWith('image/')) return 'image';
+  if (file.file_type?.startsWith('video/')) return 'video';
+  return 'image'; // fallback
+};
+
+// Função helper para obter a animação
+const getAnimation = (file: MediaFile): string => {
+  return file.animation || file.animation_type || 'fade';
+};
+
 interface MediaRendererProps {
   media: string;
   mediaObj: MediaFile;
@@ -22,11 +35,12 @@ export const MediaRenderer: React.FC<MediaRendererProps> = ({
   });
 
   const getAnimationClass = () => {
-    if (!mediaObj || !mediaObj.animation || mediaObj.animation === 'none') {
+    const animation = getAnimation(mediaObj);
+    if (!animation || animation === 'none') {
       return 'animate-fade-in';
     }
     
-    switch (mediaObj.animation) {
+    switch (animation) {
       case 'fade':
         return 'animate-fade-in';
       case 'slide-left':
@@ -44,23 +58,25 @@ export const MediaRenderer: React.FC<MediaRendererProps> = ({
 
   // Timer para imagens
   useEffect(() => {
-    if (mediaObj.type === 'image') {
-      console.log(`Imagem será exibida por ${imageDuration/1000} segundos`);
+    const mediaType = getMediaType(mediaObj);
+    if (mediaType === 'image') {
+      const duration = mediaObj.animation_duration || imageDuration;
+      console.log(`Imagem será exibida por ${duration/1000} segundos`);
       const timer = setTimeout(() => {
         console.log('Tempo de exibição da imagem finalizado');
         onMediaEnd();
-      }, imageDuration);
+      }, duration);
 
       return () => clearTimeout(timer);
     }
-  }, [media, mediaObj.type, imageDuration, onMediaEnd]);
+  }, [media, mediaObj, imageDuration, onMediaEnd]);
 
   const handleVideoEnd = () => {
     console.log('Vídeo finalizado');
     onMediaEnd();
   };
 
-  if (mediaObj.type === 'video') {
+  if (getMediaType(mediaObj) === 'video') {
     return (
       <video
         key={media}
