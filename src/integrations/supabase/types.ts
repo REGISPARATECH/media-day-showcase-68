@@ -14,7 +14,78 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      clients: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          password: string
+          prefix: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          password: string
+          prefix: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          password?: string
+          prefix?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      media_files: {
+        Row: {
+          animation_duration: number | null
+          animation_type: string | null
+          created_at: string
+          file_name: string
+          file_size: number
+          file_type: string
+          folder: string
+          hidden: boolean
+          id: string
+          original_name: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          animation_duration?: number | null
+          animation_type?: string | null
+          created_at?: string
+          file_name: string
+          file_size: number
+          file_type: string
+          folder: string
+          hidden?: boolean
+          id?: string
+          original_name: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          animation_duration?: number | null
+          animation_type?: string | null
+          created_at?: string
+          file_name?: string
+          file_size?: number
+          file_type?: string
+          folder?: string
+          hidden?: boolean
+          id?: string
+          original_name?: string
+          updated_at?: string
+          url?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
