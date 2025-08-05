@@ -6,25 +6,25 @@
 
 @layer base {
   :root {
-    --background: 222.2 84% 4.9%;
+    --background: 222 84% 4%;
     --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
+    --card: 222 84% 4%;
     --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
+    --popover: 222 84% 4%;
     --popover-foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 84% 4.9%;
-    --secondary: 217.2 32.6% 17.5%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 222 84% 4%;
+    --secondary: 217 33% 18%;
     --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
+    --muted: 217 33% 18%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 217 33% 18%;
     --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 63% 31%;
     --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 94.0%;
+    --border: 217 33% 18%;
+    --input: 217 33% 18%;
+    --ring: 224 76% 94%;
     --radius: 0.75rem;
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
@@ -36,6 +36,49 @@
     --warning: 38 92% 50%;
     --info: 199 89% 48%;
     --purple: 271 81% 56%;
+    
+    /* Light mode */
+    --background-light: 0 0% 100%;
+    --foreground-light: 222 84% 5%;
+    --card-light: 0 0% 100%;
+    --card-foreground-light: 222 84% 5%;
+    --popover-light: 0 0% 100%;
+    --popover-foreground-light: 222 84% 5%;
+    --primary-light: 217 91% 60%;
+    --primary-foreground-light: 0 0% 100%;
+    --secondary-light: 210 40% 96%;
+    --secondary-foreground-light: 222 84% 5%;
+    --muted-light: 210 40% 96%;
+    --muted-foreground-light: 215 16% 47%;
+    --accent-light: 210 40% 96%;
+    --accent-foreground-light: 222 84% 5%;
+    --destructive-light: 0 84% 60%;
+    --destructive-foreground-light: 0 0% 100%;
+    --border-light: 214 32% 91%;
+    --input-light: 214 32% 91%;
+    --ring-light: 217 91% 60%;
+  }
+
+  .light {
+    --background: var(--background-light);
+    --foreground: var(--foreground-light);
+    --card: var(--card-light);
+    --card-foreground: var(--card-foreground-light);
+    --popover: var(--popover-light);
+    --popover-foreground: var(--popover-foreground-light);
+    --primary: var(--primary-light);
+    --primary-foreground: var(--primary-foreground-light);
+    --secondary: var(--secondary-light);
+    --secondary-foreground: var(--secondary-foreground-light);
+    --muted: var(--muted-light);
+    --muted-foreground: var(--muted-foreground-light);
+    --accent: var(--accent-light);
+    --accent-foreground: var(--accent-foreground-light);
+    --destructive: var(--destructive-light);
+    --destructive-foreground: var(--destructive-foreground-light);
+    --border: var(--border-light);
+    --input: var(--input-light);
+    --ring: var(--ring-light);
   }
 }
 

@@ -30,11 +30,12 @@ export const mediaService = {
     return data || [];
   },
 
-  async uploadFile(file: File, folder: string, animationType?: string, animationDuration?: number): Promise<MediaFile> {
+  async uploadFile(file: File, folder: string, animationType?: string, animationDuration?: number, clientPrefix?: string): Promise<MediaFile> {
     try {
-      // Gerar nome único para o arquivo
+      // Gerar nome único para o arquivo com prefixo do cliente
       const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const prefix = clientPrefix ? `${clientPrefix.toLowerCase().replace(/\s+/g, '')}_` : '';
+      const fileName = `${prefix}${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
       const filePath = `${folder}/${fileName}`;
 
       // Upload do arquivo para o storage

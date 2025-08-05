@@ -13,6 +13,7 @@ import { mediaService } from '@/services/mediaService';
 import { clientService, Client } from '@/services/clientService';
 import NavigationMenu from '@/components/navigation/NavigationMenu';
 import ThemeToggle from '@/components/layout/ThemeToggle';
+import { ClientLogin } from '@/components/auth/ClientLogin';
 
 const SupabaseUpload = () => {
   const [clients, setClients] = useState<Client[]>([]);
@@ -23,6 +24,7 @@ const SupabaseUpload = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [animationType, setAnimationType] = useState('fade');
   const [animationDuration, setAnimationDuration] = useState(5000);
+  const [loggedInClient, setLoggedInClient] = useState<{ id: string; name: string } | null>(null);
   const { toast } = useToast();
 
   const folders = [
@@ -51,8 +53,8 @@ const SupabaseUpload = () => {
 
   const loadClients = async () => {
     try {
-      const clientList = await clientService.getAllClients();
-      setClients(clientList);
+      const clientsList = await clientService.getAllClients();
+      setClients(clientsList);
     } catch (error) {
       console.error('Erro ao carregar clientes:', error);
       toast({
@@ -66,87 +68,80 @@ const SupabaseUpload = () => {
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
     const validFiles = files.filter(file => {
-      const isValid = file.type.startsWith('image/') || file.type.startsWith('video/');
-      if (!isValid) {
-        toast({
-          title: 'Arquivo inválido',
-          description: `${file.name} não é um arquivo de imagem ou vídeo válido`,
-          variant: 'destructive',
-        });
-      }
-      return isValid;
+      const isImage = file.type.startsWith('image/');
+      const isVideo = file.type.startsWith('video/');
+      return isImage || isVideo;
     });
-    
-    setSelectedFiles(validFiles);
+
+    if (validFiles.length !== files.length) {
+      toast({
+        title: 'Aviso',
+        description: 'Apenas arquivos de imagem e vídeo são aceitos',
+        variant: 'destructive',
+      });
+    }
+
+    setSelectedFiles(prev => [...prev, ...validFiles]);
+  };
+
+  const removeFile = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleUpload = async () => {
+    if (!loggedInClient) {
+      toast({
+        title: 'Erro',
+        description: 'Você precisa fazer login primeiro',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     if (selectedFiles.length === 0) {
       toast({
         title: 'Erro',
-        description: 'Selecione pelo menos um arquivo para upload',
+        description: 'Selecione pelo menos um arquivo',
         variant: 'destructive',
       });
       return;
     }
 
     setIsUploading(true);
-    const progressMap: Record<string, number> = {};
-
+    
     try {
       for (let i = 0; i < selectedFiles.length; i++) {
         const file = selectedFiles[i];
         const fileKey = `${file.name}_${i}`;
         
-        progressMap[fileKey] = 0;
-        setUploadProgress({ ...progressMap });
-
-        // Simulação de progresso (o Supabase não fornece progresso de upload em tempo real)
-        const progressInterval = setInterval(() => {
-          progressMap[fileKey] = Math.min(progressMap[fileKey] + 10, 90);
-          setUploadProgress({ ...progressMap });
-        }, 100);
-
-        try {
-          await mediaService.uploadFile(
-            file,
-            selectedFolder,
-            animationType,
-            animationDuration
-          );
-
-          clearInterval(progressInterval);
-          progressMap[fileKey] = 100;
-          setUploadProgress({ ...progressMap });
-
-          toast({
-            title: 'Upload concluído',
-            description: `${file.name} foi enviado com sucesso`,
-          });
-        } catch (error) {
-          clearInterval(progressInterval);
-          console.error('Erro no upload:', error);
-          toast({
-            title: 'Erro no upload',
-            description: `Erro ao enviar ${file.name}`,
-            variant: 'destructive',
-          });
+        // Simular progresso
+        for (let progress = 0; progress <= 100; progress += 10) {
+          setUploadProgress(prev => ({ ...prev, [fileKey]: progress }));
+          await new Promise(resolve => setTimeout(resolve, 100));
         }
-      }
 
-      // Limpar formulário após upload
+        // Upload do arquivo
+        await mediaService.uploadFile(
+          file, 
+          selectedFolder, 
+          animationType, 
+          animationDuration,
+          loggedInClient.name
+        );
+        
+        toast({
+          title: 'Sucesso',
+          description: `${file.name} enviado com sucesso`,
+        });
+      }
+      
       setSelectedFiles([]);
       setUploadProgress({});
-      
-      // Reset file input
-      const fileInput = document.getElementById('file-upload') as HTMLInputElement;
-      if (fileInput) fileInput.value = '';
-
     } catch (error) {
-      console.error('Erro geral no upload:', error);
+      console.error('Erro no upload:', error);
       toast({
         title: 'Erro',
-        description: 'Erro durante o processo de upload',
+        description: 'Erro durante o upload dos arquivos',
         variant: 'destructive',
       });
     } finally {
@@ -154,15 +149,22 @@ const SupabaseUpload = () => {
     }
   };
 
-  const removeFile = (index: number) => {
-    const newFiles = selectedFiles.filter((_, i) => i !== index);
-    setSelectedFiles(newFiles);
-  };
+  // Se não estiver logado, mostrar tela de login
+  if (!loggedInClient) {
+    return <ClientLogin onLogin={(id, name) => setLoggedInClient({ id, name })} />;
+  }
 
   return (
     <div className="min-h-screen bg-background">
       <NavigationMenu />
-      <div className="absolute top-4 right-4">
+      <div className="absolute top-4 right-4 flex gap-2">
+        <Button 
+          variant="outline" 
+          onClick={() => setLoggedInClient(null)}
+          className="bg-card/90 border-border hover:bg-accent"
+        >
+          Logout ({loggedInClient.name})
+        </Button>
         <ThemeToggle />
       </div>
 
@@ -172,19 +174,20 @@ const SupabaseUpload = () => {
 
           <Tabs defaultValue="upload" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="upload">Upload de Arquivos</TabsTrigger>
+              <TabsTrigger value="upload">Upload</TabsTrigger>
               <TabsTrigger value="settings">Configurações</TabsTrigger>
             </TabsList>
 
             <TabsContent value="upload" className="space-y-6">
+              {/* Configurações do Upload */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Selecionar Arquivos</CardTitle>
+                  <CardTitle>Configurações do Upload</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="folder-select">Pasta de Destino</Label>
+                      <Label htmlFor="folder">Pasta de Destino</Label>
                       <Select value={selectedFolder} onValueChange={setSelectedFolder}>
                         <SelectTrigger>
                           <SelectValue placeholder="Selecione a pasta" />
@@ -200,7 +203,7 @@ const SupabaseUpload = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="animation-select">Tipo de Animação</Label>
+                      <Label htmlFor="animation">Tipo de Animação</Label>
                       <Select value={animationType} onValueChange={setAnimationType}>
                         <SelectTrigger>
                           <SelectValue placeholder="Selecione a animação" />
@@ -217,140 +220,149 @@ const SupabaseUpload = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="duration-input">Duração da Imagem (ms)</Label>
+                    <Label htmlFor="duration">Duração da Animação (ms)</Label>
                     <Input
-                      id="duration-input"
+                      id="duration"
                       type="number"
                       value={animationDuration}
                       onChange={(e) => setAnimationDuration(Number(e.target.value))}
                       min={1000}
-                      max={30000}
-                      step={1000}
+                      max={10000}
+                      step={500}
                     />
                   </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="file-upload">Arquivos de Mídia</Label>
-                    <Input
-                      id="file-upload"
-                      type="file"
-                      accept="image/*,video/*"
-                      multiple
-                      onChange={handleFileSelect}
-                      disabled={isUploading}
-                    />
-                  </div>
-
-                  {selectedFiles.length > 0 && (
-                    <div className="space-y-2">
-                      <h3 className="font-medium">Arquivos Selecionados:</h3>
-                      <div className="space-y-2">
-                        {selectedFiles.map((file, index) => {
-                          const fileKey = `${file.name}_${index}`;
-                          const progress = uploadProgress[fileKey] || 0;
-                          
-                          return (
-                            <div key={fileKey} className="flex items-center justify-between p-3 border rounded-lg">
-                              <div className="flex-1">
-                                <p className="font-medium">{file.name}</p>
-                                <p className="text-sm text-muted-foreground">
-                                  {(file.size / 1024 / 1024).toFixed(2)} MB
-                                </p>
-                                {isUploading && progress > 0 && (
-                                  <Progress value={progress} className="mt-2" />
-                                )}
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                {progress === 100 && (
-                                  <Check className="h-5 w-5 text-green-500" />
-                                )}
-                                {!isUploading && (
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => removeFile(index)}
-                                  >
-                                    Remover
-                                  </Button>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-
-                  <Button
-                    onClick={handleUpload}
-                    disabled={selectedFiles.length === 0 || isUploading}
-                    className="w-full"
-                  >
-                    <UploadIcon className="h-4 w-4 mr-2" />
-                    {isUploading ? 'Enviando...' : `Enviar ${selectedFiles.length} arquivo(s)`}
-                  </Button>
                 </CardContent>
               </Card>
 
-              <Alert>
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>
-                  Os arquivos serão armazenados no Supabase Storage e ficará disponível em todos os dispositivos conectados.
-                </AlertDescription>
-              </Alert>
-            </TabsContent>
-
-            <TabsContent value="settings">
+              {/* Upload de Arquivos */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Configurações de Upload</CardTitle>
+                  <CardTitle>Selecionar Arquivos</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
+                      <UploadIcon className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
                       <div className="space-y-2">
-                        <Label>Pasta Padrão</Label>
-                        <Select value={selectedFolder} onValueChange={setSelectedFolder}>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {folders.map((folder) => (
-                              <SelectItem key={folder.value} value={folder.value}>
-                                {folder.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <p className="text-lg font-medium">Arrastar arquivos aqui ou</p>
+                        <Button variant="outline" asChild>
+                          <label htmlFor="file-upload" className="cursor-pointer">
+                            Selecionar Arquivos
+                          </label>
+                        </Button>
+                        <input
+                          id="file-upload"
+                          type="file"
+                          multiple
+                          accept="image/*,video/*"
+                          onChange={handleFileSelect}
+                          className="hidden"
+                        />
                       </div>
+                      <p className="text-sm text-muted-foreground mt-2">
+                        Imagens e vídeos até 50MB cada
+                      </p>
+                    </div>
 
+                    {/* Lista de Arquivos Selecionados */}
+                    {selectedFiles.length > 0 && (
                       <div className="space-y-2">
-                        <Label>Animação Padrão</Label>
-                        <Select value={animationType} onValueChange={setAnimationType}>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {animationTypes.map((animation) => (
-                              <SelectItem key={animation.value} value={animation.value}>
-                                {animation.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <h3 className="font-medium">Arquivos Selecionados ({selectedFiles.length})</h3>
+                        <div className="space-y-2 max-h-60 overflow-y-auto">
+                          {selectedFiles.map((file, index) => {
+                            const fileKey = `${file.name}_${index}`;
+                            const progress = uploadProgress[fileKey] || 0;
+                            return (
+                              <div key={fileKey} className="flex items-center gap-2 p-2 border rounded">
+                                <div className="flex-1">
+                                  <p className="text-sm font-medium">{file.name}</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {(file.size / 1024 / 1024).toFixed(2)} MB
+                                  </p>
+                                  {progress > 0 && progress < 100 && (
+                                    <Progress value={progress} className="mt-1" />
+                                  )}
+                                  {progress === 100 && (
+                                    <div className="flex items-center gap-1 mt-1">
+                                      <Check className="h-4 w-4 text-green-500" />
+                                      <span className="text-xs text-green-500">Concluído</span>
+                                    </div>
+                                  )}
+                                </div>
+                                {!isUploading && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => removeFile(index)}
+                                  >
+                                    ×
+                                  </Button>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
+                    )}
+
+                    {selectedFiles.length > 0 && (
+                      <Button 
+                        onClick={handleUpload} 
+                        disabled={isUploading}
+                        className="w-full"
+                      >
+                        {isUploading ? 'Enviando...' : `Enviar ${selectedFiles.length} arquivo(s)`}
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="settings" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Configurações Padrão</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <Alert>
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      Essas configurações serão aplicadas por padrão aos novos uploads.
+                    </AlertDescription>
+                  </Alert>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Pasta Padrão</Label>
+                      <Select value={selectedFolder} onValueChange={setSelectedFolder}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {folders.map((folder) => (
+                            <SelectItem key={folder.value} value={folder.value}>
+                              {folder.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
 
                     <div className="space-y-2">
-                      <Label>Duração Padrão para Imagens (ms)</Label>
-                      <Input
-                        type="number"
-                        value={animationDuration}
-                        onChange={(e) => setAnimationDuration(Number(e.target.value))}
-                        min={1000}
-                        max={30000}
-                        step={1000}
-                      />
+                      <Label>Animação Padrão</Label>
+                      <Select value={animationType} onValueChange={setAnimationType}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {animationTypes.map((animation) => (
+                            <SelectItem key={animation.value} value={animation.value}>
+                              {animation.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
                 </CardContent>

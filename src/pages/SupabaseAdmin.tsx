@@ -14,6 +14,7 @@ import { clientService, Client } from '@/services/clientService';
 import { mediaService, MediaFile } from '@/services/mediaService';
 import NavigationMenu from '@/components/navigation/NavigationMenu';
 import ThemeToggle from '@/components/layout/ThemeToggle';
+import { MediaFolderManager } from '@/components/admin/MediaFolderManager';
 
 const SupabaseAdmin = () => {
   const [clients, setClients] = useState<Client[]>([]);
@@ -208,6 +209,14 @@ const SupabaseAdmin = () => {
       videos: folderFiles.filter(file => file.file_type.startsWith('video/')).length,
     };
   };
+
+  // Organizar mídias por pasta para o MediaFolderManager
+  const mediaFolders = mediaFiles.reduce((acc, file) => {
+    const folder = file.folder || 'todos';
+    if (!acc[folder]) acc[folder] = [];
+    acc[folder].push(file);
+    return acc;
+  }, {} as { [key: string]: MediaFile[] });
 
   if (loading) {
     return (
