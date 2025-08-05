@@ -142,14 +142,23 @@ const Upload = () => {
           reader.onload = (e) => {
             const newFile: MediaFile = {
               id: `${Date.now()}_${Math.random()}_${i}`,
+              original_name: file.name,
+              file_name: prefixedName,
+              file_type: file.type,
+              file_size: file.size,
+              folder: selectedFolder.toLowerCase(),
+              url: e.target?.result as string,
+              hidden: false,
+              animation_type: file.type.startsWith('image/') ? selectedAnimation : 'none',
+              animation_duration: 3000,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+              // Propriedades computadas para compatibilidade
               name: prefixedName,
               originalName: file.name,
               type: file.type.startsWith('video/') ? 'video' : 'image',
-              folder: selectedFolder.toLowerCase(),
               client: clientName,
-              url: e.target?.result as string,
               size: file.size,
-              hidden: false,
               animation: file.type.startsWith('image/') ? selectedAnimation as any : 'none'
             };
             newFiles.push(newFile);
