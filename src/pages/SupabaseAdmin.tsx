@@ -8,15 +8,16 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Eye, EyeOff, Edit, Trash2, Save, X } from 'lucide-react';
+import { Eye, EyeOff, Edit, Trash2, Save, X, Sun, Moon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { clientService, Client } from '@/services/clientService';
 import { mediaService, MediaFile } from '@/services/mediaService';
 import NavigationMenu from '@/components/navigation/NavigationMenu';
-import ThemeToggle from '@/components/layout/ThemeToggle';
-import { MediaFolderManager } from '@/components/admin/MediaFolderManager';
+import { AdminLogin } from '@/components/auth/AdminLogin';
+import { useTheme } from '@/hooks/useTheme';
 
 const SupabaseAdmin = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [clients, setClients] = useState<Client[]>([]);
   const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([]);
   const [selectedFolder, setSelectedFolder] = useState<string>('');
@@ -24,6 +25,7 @@ const SupabaseAdmin = () => {
   const [newClient, setNewClient] = useState({ name: '', prefix: '', password: '' });
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { theme, toggleTheme } = useTheme();
 
   const folders = [
     { value: '', label: 'Todas as pastas' },
@@ -210,13 +212,9 @@ const SupabaseAdmin = () => {
     };
   };
 
-  // Organizar mídias por pasta para o MediaFolderManager
-  const mediaFolders = mediaFiles.reduce((acc, file) => {
-    const folder = file.folder || 'todos';
-    if (!acc[folder]) acc[folder] = [];
-    acc[folder].push(file);
-    return acc;
-  }, {} as { [key: string]: MediaFile[] });
+  if (!isAuthenticated) {
+    return <AdminLogin onLogin={() => setIsAuthenticated(true)} />;
+  }
 
   if (loading) {
     return (
@@ -232,8 +230,23 @@ const SupabaseAdmin = () => {
   return (
     <div className="min-h-screen bg-background">
       <NavigationMenu />
-      <div className="absolute top-4 right-4">
-        <ThemeToggle />
+      <div className="absolute top-4 right-4 flex gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={toggleTheme}
+          className="border-primary/20"
+        >
+          {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setIsAuthenticated(false)}
+          className="border-destructive/20 text-destructive hover:bg-destructive/10"
+        >
+          Sair
+        </Button>
       </div>
 
       <div className="container mx-auto p-6">
@@ -524,26 +537,133 @@ const SupabaseAdmin = () => {
             <TabsContent value="folders" className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Visão Geral das Pastas</CardTitle>
+                  <CardTitle>Gerenciamento de Pastas de Mídia</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                     {folders.slice(1).map((folder) => {
                       const stats = getFolderStats(folder.value);
                       return (
-                        <Card key={folder.value} className="cursor-pointer hover:bg-accent" onClick={() => setSelectedFolder(folder.value)}>
-                          <CardContent className="p-4">
-                            <h3 className="font-semibold mb-2">{folder.label}</h3>
-                            <div className="space-y-1 text-sm">
-                              <p>Total: {stats.total} arquivos</p>
-                              <p>Imagens: {stats.images}</p>
-                              <p>Vídeos: {stats.videos}</p>
+                        <Card 
+                          key={folder.value}
+                          className={`cursor-pointer transition-colors hover:bg-muted/50 ${
+                            selectedFolder === folder.value ? 'ring-2 ring-primary' : ''
+                          }`}
+                          onClick={() => setSelectedFolder(folder.value)}
+                        >
+                          <CardContent className="p-4 text-center">
+                            <h3 className="font-medium mb-2">{folder.label}</h3>
+                            <div className="text-2xl font-bold text-primary mb-1">{stats.total}</div>
+                            <div className="text-xs text-muted-foreground">
+                              <div>{stats.images} imagens</div>
+                              <div>{stats.videos} vídeos</div>
                             </div>
                           </CardContent>
                         </Card>
                       );
                     })}
                   </div>
+
+                  {selectedFolder && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>
+                          Conteúdo - {folders.find(f => f.value === selectedFolder)?.label}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        {filteredMediaFiles.length === 0 ? (
+                          <p className="text-center text-muted-foreground py-4">
+                            Esta pasta não contém mídias
+                          </p>
+                        ) : (
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>Nome</TableHead>
+                                <TableHead>Tipo</TableHead>
+                                <TableHead>Tamanho</TableHead>
+                                <TableHead>Pasta</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead>Ações</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {filteredMediaFiles.map((file) => (
+                                <TableRow key={file.id}>
+                                  <TableCell className="font-medium">
+                                    {file.original_name}
+                                  </TableCell>
+                                  <TableCell>
+                                    <Badge variant={file.file_type.startsWith('video/') ? 'default' : 'secondary'}>
+                                      {file.file_type.startsWith('video/') ? 'Vídeo' : 'Imagem'}
+                                    </Badge>
+                                  </TableCell>
+                                  <TableCell>
+                                    {(file.file_size / 1024 / 1024).toFixed(2)} MB
+                                  </TableCell>
+                                  <TableCell>
+                                    <Select 
+                                      value={file.folder} 
+                                      onValueChange={(newFolder) => handleUpdateMediaFolder(file.id, newFolder)}
+                                    >
+                                      <SelectTrigger className="w-32">
+                                        <SelectValue />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        {folders.slice(1).map(folder => (
+                                          <SelectItem key={folder.value} value={folder.value}>
+                                            {folder.label}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                  </TableCell>
+                                  <TableCell>
+                                    <Badge variant={file.hidden ? 'destructive' : 'default'}>
+                                      {file.hidden ? 'Oculto' : 'Visível'}
+                                    </Badge>
+                                  </TableCell>
+                                  <TableCell>
+                                    <div className="flex space-x-2">
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => handleToggleVisibility(file.id, file.hidden)}
+                                      >
+                                        {file.hidden ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                                      </Button>
+                                      <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                          <Button size="sm" variant="destructive">
+                                            <Trash2 className="h-4 w-4" />
+                                          </Button>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                          <AlertDialogHeader>
+                                            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+                                            <AlertDialogDescription>
+                                              Tem certeza que deseja excluir "{file.original_name}"?
+                                            </AlertDialogDescription>
+                                          </AlertDialogHeader>
+                                          <AlertDialogFooter>
+                                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                            <AlertDialogAction onClick={() => handleDeleteMedia(file.id)}>
+                                              Excluir
+                                            </AlertDialogAction>
+                                          </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                      </AlertDialog>
+                                    </div>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        )}
+                      </CardContent>
+                    </Card>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>

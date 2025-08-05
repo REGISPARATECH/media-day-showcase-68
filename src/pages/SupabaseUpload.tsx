@@ -6,14 +6,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
-import { AlertCircle, Upload as UploadIcon, Check } from 'lucide-react';
+import { AlertCircle, Upload as UploadIcon, Check, Sun, Moon } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { mediaService } from '@/services/mediaService';
 import { clientService, Client } from '@/services/clientService';
 import NavigationMenu from '@/components/navigation/NavigationMenu';
-import ThemeToggle from '@/components/layout/ThemeToggle';
 import { ClientLogin } from '@/components/auth/ClientLogin';
+import { useTheme } from '@/hooks/useTheme';
 
 const SupabaseUpload = () => {
   const [clients, setClients] = useState<Client[]>([]);
@@ -26,6 +26,7 @@ const SupabaseUpload = () => {
   const [animationDuration, setAnimationDuration] = useState(5000);
   const [loggedInClient, setLoggedInClient] = useState<{ id: string; name: string } | null>(null);
   const { toast } = useToast();
+  const { theme, toggleTheme } = useTheme();
 
   const folders = [
     { value: 'todos', label: 'Todos os dias' },
@@ -158,14 +159,21 @@ const SupabaseUpload = () => {
     <div className="min-h-screen bg-background">
       <NavigationMenu />
       <div className="absolute top-4 right-4 flex gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={toggleTheme}
+          className="border-primary/20"
+        >
+          {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+        </Button>
         <Button 
           variant="outline" 
           onClick={() => setLoggedInClient(null)}
-          className="bg-card/90 border-border hover:bg-accent"
+          className="border-destructive/20 text-destructive hover:bg-destructive/10"
         >
-          Logout ({loggedInClient.name})
+          Sair ({loggedInClient.name})
         </Button>
-        <ThemeToggle />
       </div>
 
       <div className="container mx-auto p-6">

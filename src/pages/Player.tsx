@@ -1,15 +1,10 @@
 
 import { useState, useRef } from "react";
 import Footer from "@/components/layout/Footer";
-import NavigationMenu from "@/components/navigation/NavigationMenu";
-import ThemeToggle from "@/components/layout/ThemeToggle";
 import { useSupabaseMediaPlayer } from "@/hooks/useSupabaseMediaPlayer";
-import { useFullscreen } from "@/hooks/useFullscreen";
 import { MediaRenderer } from "@/components/player/MediaRenderer";
-import { PlayerControls } from "@/components/player/PlayerControls";
 
 const Player = () => {
-  const [isPortrait, setIsPortrait] = useState(false);
   const [showMarquee, setShowMarquee] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
   
@@ -24,54 +19,30 @@ const Player = () => {
       showNews: true,
       primaryColor: "#3b82f6",
       accentColor: "#8b5cf6",
-      playerOrientation: "landscape"
+      playerOrientation: "portrait"
     };
   });
 
   // Hooks personalizados
   const { currentMedia, currentMediaObj, loading, handleMediaEnd } = useSupabaseMediaPlayer();
-  const { isFullscreen, toggleFullscreen } = useFullscreen();
-
-  const togglePortrait = () => {
-    setIsPortrait(!isPortrait);
-  };
 
   return (
     <div 
       ref={containerRef}
-      className={`min-h-screen flex flex-col gradient-metal ${
-        isPortrait ? 'portrait-mode' : ''
-      }`}
+      className="h-screen w-screen flex flex-col gradient-metal overflow-hidden"
     >
-      <NavigationMenu />
-      <div className="absolute top-4 right-4">
-        <ThemeToggle />
-      </div>
-      
       {/* Marquee Text */}
       {showMarquee && settings.showMarquee && settings.marqueeText && (
-        <div className="bg-primary/90 text-primary-foreground py-2 overflow-hidden relative z-10">
+        <div className="bg-primary/90 text-primary-foreground py-2 overflow-hidden relative z-10 flex-shrink-0">
           <div className="animate-marquee whitespace-nowrap text-lg font-orbitron font-bold">
             {settings.marqueeText}
           </div>
         </div>
       )}
 
-      {/* Player Controls */}
-      <PlayerControls
-        isPortrait={isPortrait}
-        isFullscreen={isFullscreen}
-        onTogglePortrait={togglePortrait}
-        onToggleFullscreen={toggleFullscreen}
-      />
-
-      {/* Player Area */}
-      <div className={`flex-1 flex items-center justify-center p-2 sm:p-4 ${
-        isPortrait ? 'portrait-container' : ''
-      }`}>
-        <div className={`w-full h-full sm:max-w-6xl sm:aspect-[9/16] bg-card shadow-card rounded-lg overflow-hidden relative ${
-          isPortrait ? 'transform rotate-90 origin-center' : ''
-        }`}>
+      {/* Player Area - Portrait optimized */}
+      <div className="flex-1 flex flex-col p-2 min-h-0">
+        <div className="w-full flex-1 bg-card shadow-card rounded-lg overflow-hidden relative min-h-0">
           {loading ? (
             <div className="w-full h-full flex items-center justify-center">
               <div className="text-center">
@@ -88,7 +59,7 @@ const Player = () => {
               media={currentMedia}
               mediaObj={currentMediaObj}
               onMediaEnd={handleMediaEnd}
-              isPortrait={isPortrait}
+              isPortrait={true}
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
@@ -103,54 +74,45 @@ const Player = () => {
             </div>
           )}
         </div>
-      </div>
 
-      {/* Widgets Area */}
-      <div className="p-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Loteria Widget */}
-        {settings.showLottery && (
-          <div className="glass-effect rounded-lg p-4">
-            <h3 className="font-orbitron text-lg text-primary mb-2">MEGA-SENA</h3>
-            <div className="flex space-x-2">
-              {[2, 24, 27, 30, 53, 57].map((num, i) => (
-                <div key={i} className="w-8 h-8 bg-success rounded-full flex items-center justify-center text-white font-bold text-sm">
-                  {num}
-                </div>
-              ))}
+        {/* Widgets Area - Compact for portrait */}
+        <div className="p-2 grid grid-cols-3 gap-2 flex-shrink-0">
+          {/* Loteria Widget */}
+          {settings.showLottery && (
+            <div className="glass-effect rounded-lg p-2">
+              <h3 className="font-orbitron text-sm text-primary mb-1">MEGA-SENA</h3>
+              <div className="flex space-x-1">
+                {[2, 24, 27, 30, 53, 57].map((num, i) => (
+                  <div key={i} className="w-6 h-6 bg-success rounded-full flex items-center justify-center text-white font-bold text-xs">
+                    {num}
+                  </div>
+                ))}
+              </div>
             </div>
-            {settings.lotteryApi && (
-              <p className="text-xs text-muted-foreground mt-2">API configurada</p>
-            )}
-          </div>
-        )}
+          )}
 
-        {/* Clima Widget */}
-        {settings.showWeather && (
-          <div className="glass-effect rounded-lg p-4">
-            <h3 className="font-orbitron text-lg text-primary mb-2">CLIMA</h3>
-            <div className="text-2xl font-bold">24°C</div>
-            <div className="text-muted-foreground">Parcialmente Nublado</div>
-            {settings.weatherApi && (
-              <p className="text-xs text-muted-foreground mt-2">API configurada</p>
-            )}
-          </div>
-        )}
-
-        {/* Notícias Widget */}
-        {settings.showNews && (
-          <div className="glass-effect rounded-lg p-4">
-            <h3 className="font-orbitron text-lg text-primary mb-2">NOTÍCIAS</h3>
-            <div className="text-sm text-muted-foreground">
-              Últimas atualizações em tempo real...
+          {/* Clima Widget */}
+          {settings.showWeather && (
+            <div className="glass-effect rounded-lg p-2">
+              <h3 className="font-orbitron text-sm text-primary mb-1">CLIMA</h3>
+              <div className="text-lg font-bold">24°C</div>
+              <div className="text-xs text-muted-foreground">Nublado</div>
             </div>
-            {settings.newsApi && (
-              <p className="text-xs text-muted-foreground mt-2">API configurada</p>
-            )}
-          </div>
-        )}
-      </div>
+          )}
 
-      {settings.showFooter && <Footer />}
+          {/* Notícias Widget */}
+          {settings.showNews && (
+            <div className="glass-effect rounded-lg p-2">
+              <h3 className="font-orbitron text-sm text-primary mb-1">NOTÍCIAS</h3>
+              <div className="text-xs text-muted-foreground">
+                Atualizações...
+              </div>
+            </div>
+          )}
+        </div>
+
+        {settings.showFooter && <Footer />}
+      </div>
     </div>
   );
 };
