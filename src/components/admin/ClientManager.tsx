@@ -69,7 +69,7 @@ export function ClientManager({
           />
           <Button 
             onClick={onAddClient}
-            className="w-full gradient-primary font-orbitron"
+            className="w-full bg-red-600 hover:bg-red-700 text-white font-orbitron"
             disabled={!newClient.name || !newClient.password || !newClient.prefix}
           >
             <Save className="mr-2 w-4 h-4" />

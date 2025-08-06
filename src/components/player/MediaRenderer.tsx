@@ -84,7 +84,7 @@ export const MediaRenderer: React.FC<MediaRendererProps> = ({
         autoPlay
         muted
         onEnded={handleVideoEnd}
-        className={`${isPortrait ? 'h-full w-auto' : 'w-full h-full'} object-cover`}
+        className="max-w-full max-h-full object-contain"
       />
     );
   }
@@ -94,7 +94,7 @@ export const MediaRenderer: React.FC<MediaRendererProps> = ({
       key={media}
       src={media}
       alt="Current media"
-      className={`${isPortrait ? 'h-full w-auto' : 'w-full h-full'} object-cover ${getAnimationClass()}`}
+      className={`max-w-full max-h-full object-contain ${getAnimationClass()}`}
     />
   );
 };

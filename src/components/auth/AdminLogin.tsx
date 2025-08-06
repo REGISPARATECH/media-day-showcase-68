@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { PasswordInput } from '@/components/ui/password-input';
 
 interface AdminLoginProps {
   onLogin: () => void;
@@ -13,6 +13,7 @@ interface AdminLoginProps {
 export const AdminLogin = ({ onLogin, onCancel }: AdminLoginProps) => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [savePassword, setSavePassword] = useState(false);
   const { toast } = useToast();
 
   const ADMIN_PASSWORD = '#PARATECHCargaTotal';
@@ -63,18 +64,22 @@ export const AdminLogin = ({ onLogin, onCancel }: AdminLoginProps) => {
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="password">Senha do Administrador</Label>
-              <Input
+              <PasswordInput
                 id="password"
-                type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Digite a senha"
                 disabled={loading}
                 className="border-primary/20 focus:border-primary"
+                showSaveOption={true}
+                onSave={(savedPassword) => {
+                  localStorage.setItem('adminPassword', savedPassword);
+                  setSavePassword(true);
+                }}
               />
             </div>
             <div className="flex gap-2">
-              <Button type="submit" className="flex-1" disabled={loading}>
+              <Button type="submit" className="flex-1 bg-red-600 hover:bg-red-700 text-white" disabled={loading}>
                 {loading ? 'Verificando...' : 'Acessar'}
               </Button>
               {onCancel && (

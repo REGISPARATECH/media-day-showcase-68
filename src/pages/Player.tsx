@@ -42,7 +42,7 @@ const Player = () => {
 
       {/* Player Area - Portrait optimized */}
       <div className="flex-1 flex flex-col p-2 min-h-0">
-        <div className="w-full flex-1 bg-card shadow-card rounded-lg overflow-hidden relative min-h-0">
+        <div className="w-full flex-1 bg-card shadow-card rounded-lg overflow-hidden relative min-h-0 flex items-center justify-center">
           {loading ? (
             <div className="w-full h-full flex items-center justify-center">
               <div className="text-center">
@@ -55,12 +55,14 @@ const Player = () => {
               </div>
             </div>
           ) : currentMedia && currentMediaObj ? (
-            <MediaRenderer
-              media={currentMedia}
-              mediaObj={currentMediaObj}
-              onMediaEnd={handleMediaEnd}
-              isPortrait={true}
-            />
+            <div className="w-full h-full flex items-center justify-center">
+              <MediaRenderer
+                media={currentMedia}
+                mediaObj={currentMediaObj}
+                onMediaEnd={handleMediaEnd}
+                isPortrait={true}
+              />
+            </div>
           ) : (
             <div className="w-full h-full flex items-center justify-center">
               <div className="text-center">

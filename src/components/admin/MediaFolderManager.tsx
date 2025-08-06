@@ -148,7 +148,7 @@ export function MediaFolderManager({
                           </Button>
                           <Button
                             size="sm"
-                            variant="destructive"
+                            className="bg-red-600 hover:bg-red-700 text-white"
                             onClick={() => onDeleteMedia(selectedFolder, media.id)}
                           >
                             <Trash2 className="h-4 w-4" />

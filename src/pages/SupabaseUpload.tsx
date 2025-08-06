@@ -12,7 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { mediaService } from '@/services/mediaService';
 import { clientService, Client } from '@/services/clientService';
 import NavigationMenu from '@/components/navigation/NavigationMenu';
-import { ClientLogin } from '@/components/auth/ClientLogin';
+import { ClientLoginNew } from '@/components/auth/ClientLoginNew';
 import { useTheme } from '@/hooks/useTheme';
 
 const SupabaseUpload = () => {
@@ -152,25 +152,25 @@ const SupabaseUpload = () => {
 
   // Se não estiver logado, mostrar tela de login
   if (!loggedInClient) {
-    return <ClientLogin onLogin={(id, name) => setLoggedInClient({ id, name })} />;
+    return <ClientLoginNew onLogin={(id, name) => setLoggedInClient({ id, name })} />;
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
       <NavigationMenu />
       <div className="absolute top-4 right-4 flex gap-2">
         <Button
           variant="outline"
           size="sm"
           onClick={toggleTheme}
-          className="border-primary/20"
+          className="border-primary/20 bg-white/90 dark:bg-gray-900/90"
         >
           {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
         </Button>
         <Button 
           variant="outline" 
           onClick={() => setLoggedInClient(null)}
-          className="border-destructive/20 text-destructive hover:bg-destructive/10"
+          className="border-destructive/20 text-destructive hover:bg-destructive/10 bg-white/90 dark:bg-gray-900/90"
         >
           Sair ({loggedInClient.name})
         </Button>
@@ -181,9 +181,8 @@ const SupabaseUpload = () => {
           <h1 className="text-3xl font-bold mb-6">Upload de Mídias</h1>
 
           <Tabs defaultValue="upload" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-1">
               <TabsTrigger value="upload">Upload</TabsTrigger>
-              <TabsTrigger value="settings">Configurações</TabsTrigger>
             </TabsList>
 
             <TabsContent value="upload" className="space-y-6">
@@ -314,64 +313,14 @@ const SupabaseUpload = () => {
                     )}
 
                     {selectedFiles.length > 0 && (
-                      <Button 
+                    <Button 
                         onClick={handleUpload} 
                         disabled={isUploading}
-                        className="w-full"
+                        className="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-medium"
                       >
                         {isUploading ? 'Enviando...' : `Enviar ${selectedFiles.length} arquivo(s)`}
                       </Button>
                     )}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="settings" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Configurações Padrão</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <Alert>
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>
-                      Essas configurações serão aplicadas por padrão aos novos uploads.
-                    </AlertDescription>
-                  </Alert>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Pasta Padrão</Label>
-                      <Select value={selectedFolder} onValueChange={setSelectedFolder}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {folders.map((folder) => (
-                            <SelectItem key={folder.value} value={folder.value}>
-                              {folder.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>Animação Padrão</Label>
-                      <Select value={animationType} onValueChange={setAnimationType}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {animationTypes.map((animation) => (
-                            <SelectItem key={animation.value} value={animation.value}>
-                              {animation.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
                   </div>
                 </CardContent>
               </Card>

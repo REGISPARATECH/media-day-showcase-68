@@ -15,6 +15,7 @@ import { mediaService, MediaFile } from '@/services/mediaService';
 import NavigationMenu from '@/components/navigation/NavigationMenu';
 import { AdminLogin } from '@/components/auth/AdminLogin';
 import { useTheme } from '@/hooks/useTheme';
+import { SettingsManager } from '@/components/admin/SettingsManager';
 
 const SupabaseAdmin = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -256,8 +257,8 @@ const SupabaseAdmin = () => {
           <Tabs defaultValue="clients" className="w-full">
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="clients">Clientes</TabsTrigger>
-              <TabsTrigger value="media">Mídias</TabsTrigger>
               <TabsTrigger value="folders">Pastas</TabsTrigger>
+              <TabsTrigger value="settings">Configurações</TabsTrigger>
             </TabsList>
 
             <TabsContent value="clients" className="space-y-6">
@@ -301,7 +302,7 @@ const SupabaseAdmin = () => {
                       />
                     </div>
                   </div>
-                  <Button onClick={handleAddClient}>Salvar Cliente</Button>
+                  <Button onClick={handleAddClient} className="bg-red-600 hover:bg-red-700 text-white">Salvar Cliente</Button>
                 </CardContent>
               </Card>
 
@@ -393,7 +394,7 @@ const SupabaseAdmin = () => {
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
                                       <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                      <AlertDialogAction onClick={() => handleDeleteClient(client.id)}>
+                                   <AlertDialogAction onClick={() => handleDeleteClient(client.id)} className="bg-red-600 hover:bg-red-700 text-white">
                                         Excluir
                                       </AlertDialogAction>
                                     </AlertDialogFooter>
@@ -534,6 +535,10 @@ const SupabaseAdmin = () => {
               </Card>
             </TabsContent>
 
+            <TabsContent value="settings" className="space-y-6">
+              <SettingsManager />
+            </TabsContent>
+
             <TabsContent value="folders" className="space-y-6">
               <Card>
                 <CardHeader>
@@ -633,12 +638,12 @@ const SupabaseAdmin = () => {
                                       >
                                         {file.hidden ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                                       </Button>
-                                      <AlertDialog>
-                                        <AlertDialogTrigger asChild>
-                                          <Button size="sm" variant="destructive">
-                                            <Trash2 className="h-4 w-4" />
-                                          </Button>
-                                        </AlertDialogTrigger>
+                                       <AlertDialog>
+                                         <AlertDialogTrigger asChild>
+                                           <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white">
+                                             <Trash2 className="h-4 w-4" />
+                                           </Button>
+                                         </AlertDialogTrigger>
                                         <AlertDialogContent>
                                           <AlertDialogHeader>
                                             <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
@@ -648,9 +653,9 @@ const SupabaseAdmin = () => {
                                           </AlertDialogHeader>
                                           <AlertDialogFooter>
                                             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                            <AlertDialogAction onClick={() => handleDeleteMedia(file.id)}>
-                                              Excluir
-                                            </AlertDialogAction>
+                                             <AlertDialogAction onClick={() => handleDeleteMedia(file.id)} className="bg-red-600 hover:bg-red-700 text-white">
+                                               Excluir
+                                             </AlertDialogAction>
                                           </AlertDialogFooter>
                                         </AlertDialogContent>
                                       </AlertDialog>
