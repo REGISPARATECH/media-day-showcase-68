@@ -1,5 +1,5 @@
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Footer from "@/components/layout/Footer";
 import { useSupabaseMediaPlayer } from "@/hooks/useSupabaseMediaPlayer";
 import { MediaRenderer } from "@/components/player/MediaRenderer";
@@ -9,7 +9,7 @@ const Player = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   
   const [settings, setSettings] = useState(() => {
-    const saved = localStorage.getItem('systemSettings');
+    const saved = localStorage.getItem('appSettings');
     return saved ? JSON.parse(saved) : {
       showFooter: true,
       showMarquee: true,
@@ -17,11 +17,43 @@ const Player = () => {
       showLottery: true,
       showWeather: true,
       showNews: true,
+      showWidgets: true,
       primaryColor: "#3b82f6",
       accentColor: "#8b5cf6",
       playerOrientation: "portrait"
     };
   });
+
+  // Listener para mudanças nas configurações
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const saved = localStorage.getItem('appSettings');
+      if (saved) {
+        setSettings(JSON.parse(saved));
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Verificar mudanças a cada segundo
+    const interval = setInterval(() => {
+      const saved = localStorage.getItem('appSettings');
+      if (saved) {
+        const newSettings = JSON.parse(saved);
+        setSettings(prev => {
+          if (JSON.stringify(prev) !== JSON.stringify(newSettings)) {
+            return newSettings;
+          }
+          return prev;
+        });
+      }
+    }, 1000);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
+  }, []);
 
   // Hooks personalizados
   const { currentMedia, currentMediaObj, loading, handleMediaEnd } = useSupabaseMediaPlayer();
@@ -78,40 +110,42 @@ const Player = () => {
         </div>
 
         {/* Widgets Area - Compact for portrait */}
-        <div className="p-2 grid grid-cols-3 gap-2 flex-shrink-0">
-          {/* Loteria Widget */}
-          {settings.showLottery && (
-            <div className="glass-effect rounded-lg p-2">
-              <h3 className="font-orbitron text-sm text-primary mb-1">MEGA-SENA</h3>
-              <div className="flex space-x-1">
-                {[2, 24, 27, 30, 53, 57].map((num, i) => (
-                  <div key={i} className="w-6 h-6 bg-success rounded-full flex items-center justify-center text-white font-bold text-xs">
-                    {num}
-                  </div>
-                ))}
+        {settings.showWidgets && (
+          <div className="p-2 grid grid-cols-3 gap-2 flex-shrink-0">
+            {/* Loteria Widget */}
+            {settings.showLottery && (
+              <div className="glass-effect rounded-lg p-2">
+                <h3 className="font-orbitron text-sm text-primary mb-1">MEGA-SENA</h3>
+                <div className="flex space-x-1">
+                  {[2, 24, 27, 30, 53, 57].map((num, i) => (
+                    <div key={i} className="w-6 h-6 bg-success rounded-full flex items-center justify-center text-white font-bold text-xs">
+                      {num}
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Clima Widget */}
-          {settings.showWeather && (
-            <div className="glass-effect rounded-lg p-2">
-              <h3 className="font-orbitron text-sm text-primary mb-1">CLIMA</h3>
-              <div className="text-lg font-bold">24°C</div>
-              <div className="text-xs text-muted-foreground">Nublado</div>
-            </div>
-          )}
-
-          {/* Notícias Widget */}
-          {settings.showNews && (
-            <div className="glass-effect rounded-lg p-2">
-              <h3 className="font-orbitron text-sm text-primary mb-1">NOTÍCIAS</h3>
-              <div className="text-xs text-muted-foreground">
-                Atualizações...
+            {/* Clima Widget */}
+            {settings.showWeather && (
+              <div className="glass-effect rounded-lg p-2">
+                <h3 className="font-orbitron text-sm text-primary mb-1">CLIMA</h3>
+                <div className="text-lg font-bold">24°C</div>
+                <div className="text-xs text-muted-foreground">Nublado</div>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+
+            {/* Notícias Widget */}
+            {settings.showNews && (
+              <div className="glass-effect rounded-lg p-2">
+                <h3 className="font-orbitron text-sm text-primary mb-1">NOTÍCIAS</h3>
+                <div className="text-xs text-muted-foreground">
+                  Atualizações...
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {settings.showFooter && <Footer />}
       </div>
