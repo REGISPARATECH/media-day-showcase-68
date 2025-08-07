@@ -76,7 +76,17 @@ const Player = () => {
       {/* Player Area - Responsive */}
       <div className="flex-1 flex flex-col p-1 sm:p-2 min-h-0">
         <div className="w-full flex-1 bg-card shadow-card rounded-lg overflow-hidden relative min-h-0 flex items-center justify-center">
-          {loading ? (
+          {currentMedia && currentMediaObj ? (
+            <div className="w-full h-full flex items-center justify-center">
+              <MediaRenderer
+                media={currentMedia}
+                mediaObj={currentMediaObj}
+                onMediaEnd={handleMediaEnd}
+                isPortrait={true}
+                muteVideos={settings.muteVideos}
+              />
+            </div>
+          ) : loading ? (
             <div className="w-full h-full flex items-center justify-center p-4">
               <div className="text-center">
                 <h2 className="font-orbitron text-xl sm:text-2xl lg:text-4xl text-primary neon-glow mb-2 sm:mb-4">
@@ -86,16 +96,6 @@ const Player = () => {
                   Conectando ao servidor...
                 </p>
               </div>
-            </div>
-          ) : currentMedia && currentMediaObj ? (
-            <div className="w-full h-full flex items-center justify-center">
-              <MediaRenderer
-                media={currentMedia}
-                mediaObj={currentMediaObj}
-                onMediaEnd={handleMediaEnd}
-                isPortrait={true}
-                muteVideos={settings.muteVideos}
-              />
             </div>
           ) : (
             <div className="w-full h-full flex items-center justify-center p-4">

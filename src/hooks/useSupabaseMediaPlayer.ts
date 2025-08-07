@@ -55,6 +55,17 @@ export const useSupabaseMediaPlayer = () => {
     const media = availableMedia[currentIndex];
     console.log(`Reproduzindo mídia ${currentIndex + 1}/${availableMedia.length}:`, media.original_name);
     
+    // Precarregar mídia antes de definir como atual
+    if (media.file_type?.startsWith('video/')) {
+      const video = document.createElement('video');
+      video.preload = 'metadata';
+      video.src = media.url;
+      video.load();
+    } else if (media.file_type?.startsWith('image/')) {
+      const img = new Image();
+      img.src = media.url;
+    }
+    
     setCurrentMedia(media.url);
     setCurrentMediaObj(media);
     setIsPlaying(true);
