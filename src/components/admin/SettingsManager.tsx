@@ -6,8 +6,9 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
-import { Save, Sun, Moon, Eye, EyeOff } from 'lucide-react';
+import { Save, Sun, Moon, Eye, EyeOff, Volume2, VolumeX } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { settingsService, SystemSettings } from '@/services/settingsService';
 
 interface AppSettings {
   theme: 'light' | 'dark';
@@ -18,6 +19,7 @@ interface AppSettings {
   showLottery: boolean;
   showWeather: boolean;
   showNews: boolean;
+  muteVideos: boolean;
   lotteryApiKey: string;
   weatherApiKey: string;
   newsRssFeed: string;
@@ -34,27 +36,69 @@ export function SettingsManager() {
     showLottery: true,
     showWeather: true,
     showNews: true,
+    muteVideos: false,
     lotteryApiKey: '',
     weatherApiKey: '',
     newsRssFeed: 'https://feeds.feedburner.com/g1/economia'
   });
 
   const [showApiKeys, setShowApiKeys] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    // Carregar configurações salvas
-    const savedSettings = localStorage.getItem('appSettings');
-    if (savedSettings) {
-      setSettings(JSON.parse(savedSettings));
-    }
+    loadSettings();
   }, []);
 
-  const handleSaveSettings = () => {
+  const loadSettings = async () => {
     try {
-      localStorage.setItem('appSettings', JSON.stringify(settings));
+      const savedSettings = await settingsService.getSettings();
+      if (savedSettings) {
+        setSettings({
+          theme: savedSettings.theme as 'light' | 'dark',
+          showMarquee: savedSettings.show_marquee,
+          marqueeText: savedSettings.marquee_text,
+          showFooter: savedSettings.show_footer,
+          showWidgets: savedSettings.show_widgets,
+          showLottery: savedSettings.show_lottery,
+          showWeather: savedSettings.show_weather,
+          showNews: savedSettings.show_news,
+          muteVideos: savedSettings.mute_videos,
+          lotteryApiKey: savedSettings.lottery_api || '',
+          weatherApiKey: savedSettings.weather_api || '',
+          newsRssFeed: savedSettings.news_api || 'https://feeds.feedburner.com/g1/economia'
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao carregar configurações:', error);
+    }
+  };
+
+  const handleSaveSettings = async () => {
+    setIsLoading(true);
+    try {
+      const dbSettings = {
+        theme: settings.theme,
+        show_marquee: settings.showMarquee,
+        marquee_text: settings.marqueeText,
+        show_footer: settings.showFooter,
+        show_widgets: settings.showWidgets,
+        show_lottery: settings.showLottery,
+        show_weather: settings.showWeather,
+        show_news: settings.showNews,
+        mute_videos: settings.muteVideos,
+        lottery_api: settings.lotteryApiKey,
+        weather_api: settings.weatherApiKey,
+        news_api: settings.newsRssFeed
+      };
+
+      await settingsService.updateSettings(dbSettings);
+      
       // Aplicar tema imediatamente
       document.documentElement.classList.remove('light', 'dark');
       document.documentElement.classList.add(settings.theme);
+      
+      // Também salvar no localStorage para compatibilidade
+      localStorage.setItem('appSettings', JSON.stringify(settings));
       
       toast({
         title: 'Sucesso',
@@ -67,6 +111,7 @@ export function SettingsManager() {
         variant: 'destructive',
       });
     }
+    setIsLoading(false);
   };
 
   const handleThemeToggle = () => {
@@ -75,7 +120,7 @@ export function SettingsManager() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-4xl mx-auto p-4 sm:p-6">
       {/* Aparência */}
       <Card>
         <CardHeader>
@@ -85,7 +130,7 @@ export function SettingsManager() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <Label>Tema da Aplicação</Label>
               <p className="text-sm text-muted-foreground">
@@ -119,7 +164,23 @@ export function SettingsManager() {
           <CardTitle>Configurações do Player</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <Label>Som dos Vídeos</Label>
+              <p className="text-sm text-muted-foreground">Controlar áudio dos vídeos</p>
+            </div>
+            <div className="flex items-center gap-2">
+              {settings.muteVideos ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+              <Switch
+                checked={!settings.muteVideos}
+                onCheckedChange={(checked) => setSettings(prev => ({ ...prev, muteVideos: !checked }))}
+              />
+            </div>
+          </div>
+
+          <Separator />
+
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <Label>Exibir Letreiro</Label>
               <p className="text-sm text-muted-foreground">Mostrar texto em movimento no topo</p>
@@ -139,13 +200,14 @@ export function SettingsManager() {
                 onChange={(e) => setSettings(prev => ({ ...prev, marqueeText: e.target.value }))}
                 placeholder="Digite o texto que aparecerá no letreiro"
                 rows={2}
+                className="resize-none"
               />
             </div>
           )}
 
           <Separator />
 
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <Label>Exibir Rodapé</Label>
               <p className="text-sm text-muted-foreground">Mostrar rodapé na parte inferior</p>
@@ -156,7 +218,7 @@ export function SettingsManager() {
             />
           </div>
 
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <Label>Exibir Widgets</Label>
               <p className="text-sm text-muted-foreground">Mostrar widgets de informações</p>
@@ -176,7 +238,7 @@ export function SettingsManager() {
             <CardTitle>Configurações dos Widgets</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
                 <Label>Widget Loteria</Label>
                 <p className="text-sm text-muted-foreground">Resultados das loterias brasileiras</p>
@@ -187,7 +249,7 @@ export function SettingsManager() {
               />
             </div>
 
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
                 <Label>Widget Clima</Label>
                 <p className="text-sm text-muted-foreground">Informações meteorológicas locais</p>
@@ -198,7 +260,7 @@ export function SettingsManager() {
               />
             </div>
 
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
                 <Label>Widget Notícias</Label>
                 <p className="text-sm text-muted-foreground">Feed de notícias do Brasil</p>
@@ -279,9 +341,13 @@ export function SettingsManager() {
       {/* Salvar */}
       <Card>
         <CardContent className="pt-6">
-          <Button onClick={handleSaveSettings} className="w-full bg-red-600 hover:bg-red-700 text-white">
+          <Button 
+            onClick={handleSaveSettings} 
+            disabled={isLoading}
+            className="w-full bg-red-600 hover:bg-red-700 text-white"
+          >
             <Save className="mr-2 h-4 w-4" />
-            Salvar Configurações
+            {isLoading ? 'Salvando...' : 'Salvar Configurações'}
           </Button>
         </CardContent>
       </Card>

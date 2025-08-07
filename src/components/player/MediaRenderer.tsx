@@ -20,13 +20,15 @@ interface MediaRendererProps {
   mediaObj: MediaFile;
   onMediaEnd: () => void;
   isPortrait: boolean;
+  muteVideos?: boolean;
 }
 
 export const MediaRenderer: React.FC<MediaRendererProps> = ({ 
   media, 
   mediaObj, 
   onMediaEnd,
-  isPortrait 
+  isPortrait,
+  muteVideos = false
 }) => {
   const [imageDuration] = useState(() => {
     // Duração configurável para imagens (1 a 10 segundos)
@@ -82,9 +84,10 @@ export const MediaRenderer: React.FC<MediaRendererProps> = ({
         key={media}
         src={media}
         autoPlay
-        muted
+        muted={muteVideos}
         onEnded={handleVideoEnd}
-        className="max-w-full max-h-full object-contain"
+        className="w-full h-full object-contain"
+        style={{ maxWidth: '100%', maxHeight: '100%' }}
       />
     );
   }
@@ -94,7 +97,8 @@ export const MediaRenderer: React.FC<MediaRendererProps> = ({
       key={media}
       src={media}
       alt="Current media"
-      className={`max-w-full max-h-full object-contain ${getAnimationClass()}`}
+      className={`w-full h-full object-contain ${getAnimationClass()}`}
+      style={{ maxWidth: '100%', maxHeight: '100%' }}
     />
   );
 };
