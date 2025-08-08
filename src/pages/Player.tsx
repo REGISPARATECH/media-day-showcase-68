@@ -25,6 +25,51 @@ const Player = () => {
       playerOrientation: "portrait"
     };
   });
+  // Kiosk & orientação
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('matchMedia' in window)) return;
+    const mql = window.matchMedia('(orientation: portrait)');
+    const update = () => setIsPortrait(mql.matches);
+    update();
+    mql.addEventListener?.('change', update as any);
+    window.addEventListener('resize', update);
+    return () => {
+      mql.removeEventListener?.('change', update as any);
+      window.removeEventListener('resize', update);
+    };
+  }, []);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    let idleTimer: any;
+    const resetCursor = () => {
+      el.classList.remove('cursor-none');
+      clearTimeout(idleTimer);
+      idleTimer = setTimeout(() => el.classList.add('cursor-none'), 3000);
+    };
+    resetCursor();
+
+    const preventContext = (e: MouseEvent) => e.preventDefault();
+    document.addEventListener('contextmenu', preventContext);
+    el.addEventListener('mousemove', resetCursor);
+
+    let wakeLock: any;
+    const requestWakeLock = async () => {
+      try { wakeLock = await (navigator as any).wakeLock?.request('screen'); } catch {}
+    };
+    requestWakeLock();
+    const visHandler = () => { if (document.visibilityState === 'visible') requestWakeLock(); };
+    document.addEventListener('visibilitychange', visHandler);
+
+    return () => {
+      document.removeEventListener('contextmenu', preventContext);
+      el.removeEventListener('mousemove', resetCursor);
+      clearTimeout(idleTimer);
+      try { wakeLock?.release?.(); } catch {}
+      document.removeEventListener('visibilitychange', visHandler);
+    };
+  }, []);
 
   // Listener para mudanças nas configurações
   useEffect(() => {
@@ -94,7 +139,7 @@ const Player = () => {
                 media={currentMedia}
                 mediaObj={currentMediaObj}
                 onMediaEnd={handleMediaEnd}
-                isPortrait={true}
+                isPortrait={isPortrait}
               />
             </div>
           ) : (

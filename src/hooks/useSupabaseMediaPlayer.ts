@@ -72,8 +72,18 @@ export const useSupabaseMediaPlayer = () => {
   useEffect(() => {
     updateMediaFiles();
     
-    // Atualizar a cada 30 segundos
-    const updateInterval = setInterval(updateMediaFiles, 30000);
+    // Atualizar conforme configuração
+    const settingsRaw = localStorage.getItem('appSettings');
+    const intervalMs = (() => {
+      try {
+        const parsed = JSON.parse(settingsRaw || '{}');
+        const val = parsed.playerRefreshIntervalMs || 30000;
+        return Math.max(5000, Number(val));
+      } catch {
+        return 30000;
+      }
+    })();
+    const updateInterval = setInterval(updateMediaFiles, intervalMs);
     
     return () => clearInterval(updateInterval);
   }, [updateMediaFiles]);

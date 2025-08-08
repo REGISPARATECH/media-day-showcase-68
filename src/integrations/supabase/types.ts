@@ -86,6 +86,63 @@ export type Database = {
         }
         Relationships: []
       }
+      system_settings: {
+        Row: {
+          created_at: string
+          id: string
+          lottery_api: string | null
+          marquee_text: string
+          mute_videos: boolean
+          news_api: string | null
+          player_refresh_interval_ms: number
+          show_footer: boolean
+          show_lottery: boolean
+          show_marquee: boolean
+          show_news: boolean
+          show_weather: boolean
+          show_widgets: boolean
+          theme: string
+          updated_at: string
+          weather_api: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lottery_api?: string | null
+          marquee_text?: string
+          mute_videos?: boolean
+          news_api?: string | null
+          player_refresh_interval_ms?: number
+          show_footer?: boolean
+          show_lottery?: boolean
+          show_marquee?: boolean
+          show_news?: boolean
+          show_weather?: boolean
+          show_widgets?: boolean
+          theme?: string
+          updated_at?: string
+          weather_api?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lottery_api?: string | null
+          marquee_text?: string
+          mute_videos?: boolean
+          news_api?: string | null
+          player_refresh_interval_ms?: number
+          show_footer?: boolean
+          show_lottery?: boolean
+          show_marquee?: boolean
+          show_news?: boolean
+          show_weather?: boolean
+          show_widgets?: boolean
+          theme?: string
+          updated_at?: string
+          weather_api?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

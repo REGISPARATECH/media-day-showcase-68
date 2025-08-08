@@ -7,6 +7,7 @@ import Player from "./pages/Player";
 import SupabaseUpload from "./pages/SupabaseUpload";
 import SupabaseAdmin from "./pages/SupabaseAdmin";
 import NotFound from "./pages/NotFound";
+import KeyboardShortcuts from "./components/KeyboardShortcuts";
 
 const queryClient = new QueryClient();
 
@@ -16,6 +17,8 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        {/* Global keyboard shortcuts */}
+        <KeyboardShortcuts />
         <Routes>
           <Route path="/" element={<Player />} />
           <Route path="/upload" element={<SupabaseUpload />} />

@@ -411,7 +411,7 @@ const SupabaseAdmin = () => {
               </Card>
             </TabsContent>
 
-            <TabsContent value="media" className="space-y-6">
+            <TabsContent value="folders" className="space-y-6">
               {/* Filtro de Pasta */}
               <Card>
                 <CardHeader>

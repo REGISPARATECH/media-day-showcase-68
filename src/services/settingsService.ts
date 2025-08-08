@@ -13,6 +13,7 @@ export interface AppSettings {
   weatherApiKey: string;
   newsRssFeed: string;
   muteVideos?: boolean;
+  playerRefreshIntervalMs?: number;
 }
 
 // Internal DB shape for system_settings
@@ -30,6 +31,7 @@ interface DbSystemSettings {
   weather_api: string | null;
   news_api: string | null;
   mute_videos: boolean;
+  player_refresh_interval_ms: number;
 }
 
 const DEFAULT_SETTINGS: AppSettings = {
@@ -45,6 +47,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   weatherApiKey: '',
   newsRssFeed: 'https://feeds.feedburner.com/g1/economia',
   muteVideos: false,
+  playerRefreshIntervalMs: 30000,
 };
 
 function mapDbToApp(s: DbSystemSettings): AppSettings {
@@ -61,6 +64,7 @@ function mapDbToApp(s: DbSystemSettings): AppSettings {
     weatherApiKey: s.weather_api || '',
     newsRssFeed: s.news_api || DEFAULT_SETTINGS.newsRssFeed,
     muteVideos: s.mute_videos,
+    playerRefreshIntervalMs: s.player_refresh_interval_ms ?? DEFAULT_SETTINGS.playerRefreshIntervalMs,
   };
 }
 
@@ -78,6 +82,7 @@ function mapAppToDb(s: AppSettings): Partial<DbSystemSettings> {
     weather_api: s.weatherApiKey || null,
     news_api: s.newsRssFeed || null,
     mute_videos: !!s.muteVideos,
+    player_refresh_interval_ms: s.playerRefreshIntervalMs ?? DEFAULT_SETTINGS.playerRefreshIntervalMs!,
   };
 }
 

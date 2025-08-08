@@ -9,11 +9,13 @@ import { Progress } from '@/components/ui/progress';
 import { AlertCircle, Upload as UploadIcon, Check, Sun, Moon } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
-import { mediaService } from '@/services/mediaService';
+import { mediaService, MediaFile } from '@/services/mediaService';
 import { clientService, Client } from '@/services/clientService';
 import NavigationMenu from '@/components/navigation/NavigationMenu';
 import { ClientLoginNew } from '@/components/auth/ClientLoginNew';
 import { useTheme } from '@/hooks/useTheme';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Eye, EyeOff, Trash2 } from 'lucide-react';
 
 const SupabaseUpload = () => {
   const [clients, setClients] = useState<Client[]>([]);
@@ -25,6 +27,7 @@ const SupabaseUpload = () => {
   const [animationType, setAnimationType] = useState('fade');
   const [animationDuration, setAnimationDuration] = useState(5000);
   const [loggedInClient, setLoggedInClient] = useState<{ id: string; name: string } | null>(null);
+  const [myFiles, setMyFiles] = useState<MediaFile[]>([]);
   const { toast } = useToast();
   const { theme, toggleTheme } = useTheme();
 
@@ -52,6 +55,10 @@ const SupabaseUpload = () => {
     loadClients();
   }, []);
 
+  useEffect(() => {
+    loadMyFiles();
+  }, [loggedInClient, clients]);
+
   const loadClients = async () => {
     try {
       const clientsList = await clientService.getAllClients();
@@ -66,23 +73,18 @@ const SupabaseUpload = () => {
     }
   };
 
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files || []);
-    const validFiles = files.filter(file => {
-      const isImage = file.type.startsWith('image/');
-      const isVideo = file.type.startsWith('video/');
-      return isImage || isVideo;
-    });
-
-    if (validFiles.length !== files.length) {
-      toast({
-        title: 'Aviso',
-        description: 'Apenas arquivos de imagem e vídeo são aceitos',
-        variant: 'destructive',
-      });
+  const loadMyFiles = async () => {
+    try {
+      if (!loggedInClient) return;
+      const client = clients.find(c => c.id === loggedInClient.id || c.name === loggedInClient.name);
+      if (!client) return;
+      const all = await mediaService.getAllMediaFiles();
+      const prefix = `${client.prefix.toLowerCase()}_`;
+      const mine = all.filter(f => f.file_name?.startsWith(prefix));
+      setMyFiles(mine);
+    } catch (err) {
+      console.error('Erro ao carregar mídias do cliente:', err);
     }
-
-    setSelectedFiles(prev => [...prev, ...validFiles]);
   };
 
   const removeFile = (index: number) => {
@@ -109,48 +111,35 @@ const SupabaseUpload = () => {
     }
 
     setIsUploading(true);
-    
     try {
+      const client = clients.find(c => c.id === loggedInClient.id || c.name === loggedInClient.name);
       for (let i = 0; i < selectedFiles.length; i++) {
         const file = selectedFiles[i];
         const fileKey = `${file.name}_${i}`;
-        
-        // Simular progresso
         for (let progress = 0; progress <= 100; progress += 10) {
           setUploadProgress(prev => ({ ...prev, [fileKey]: progress }));
           await new Promise(resolve => setTimeout(resolve, 100));
         }
-
-        // Upload do arquivo
         await mediaService.uploadFile(
-          file, 
-          selectedFolder, 
-          animationType, 
+          file,
+          selectedFolder,
+          animationType,
           animationDuration,
-          loggedInClient.name
+          client?.prefix
         );
-        
-        toast({
-          title: 'Sucesso',
-          description: `${file.name} enviado com sucesso`,
-        });
+        toast({ title: 'Sucesso', description: `${file.name} enviado com sucesso` });
       }
-      
       setSelectedFiles([]);
       setUploadProgress({});
+      await loadMyFiles();
     } catch (error) {
       console.error('Erro no upload:', error);
-      toast({
-        title: 'Erro',
-        description: 'Erro durante o upload dos arquivos',
-        variant: 'destructive',
-      });
+      toast({ title: 'Erro', description: 'Erro durante o upload dos arquivos', variant: 'destructive' });
     } finally {
       setIsUploading(false);
     }
   };
 
-  // Se não estiver logado, mostrar tela de login
   if (!loggedInClient) {
     return <ClientLoginNew onLogin={(id, name) => setLoggedInClient({ id, name })} />;
   }
@@ -322,9 +311,64 @@ const SupabaseUpload = () => {
                       </Button>
                     )}
                   </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
+              </CardContent>
+            </Card>
+
+            {/* Minhas Mídias */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Mídias do Cliente</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {myFiles.length === 0 ? (
+                  <p className="text-muted-foreground">Nenhuma mídia enviada ainda.</p>
+                ) : (
+                  <div className="w-full overflow-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Nome</TableHead>
+                          <TableHead>Pasta</TableHead>
+                          <TableHead>Tipo</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead className="text-right">Ações</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {myFiles.map((file) => (
+                          <TableRow key={file.id}>
+                            <TableCell className="font-medium">{file.original_name}</TableCell>
+                            <TableCell>
+                              <Select value={file.folder} onValueChange={async (v) => { await mediaService.updateFolder(file.id, v); await loadMyFiles(); }}>
+                                <SelectTrigger className="w-40">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {folders.map((f) => (
+                                    <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </TableCell>
+                            <TableCell>{file.file_type.startsWith('video/') ? 'Vídeo' : 'Imagem'}</TableCell>
+                            <TableCell>{file.hidden ? 'Oculto' : 'Visível'}</TableCell>
+                            <TableCell className="text-right space-x-2">
+                              <Button size="sm" variant="outline" onClick={async () => { await mediaService.toggleVisibility(file.id, !file.hidden); await loadMyFiles(); }}>
+                                {file.hidden ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                              </Button>
+                              <Button size="sm" variant="destructive" onClick={async () => { await mediaService.deleteMediaFile(file.id); await loadMyFiles(); }}>
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
           </Tabs>
         </div>
       </div>

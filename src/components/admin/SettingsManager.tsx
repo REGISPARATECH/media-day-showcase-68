@@ -22,6 +22,7 @@ interface AppSettings {
   lotteryApiKey: string;
   weatherApiKey: string;
   newsRssFeed: string;
+  playerRefreshIntervalMs?: number;
 }
 
 export function SettingsManager() {
@@ -177,6 +178,22 @@ export function SettingsManager() {
               checked={settings.showWidgets}
               onCheckedChange={(checked) => setSettings(prev => ({ ...prev, showWidgets: checked }))}
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="player-refresh">Tempo de atualização do player (segundos)</Label>
+            <Input
+              id="player-refresh"
+              type="number"
+              min={5}
+              step={5}
+              value={Math.round(((settings.playerRefreshIntervalMs ?? 30000) / 1000))}
+              onChange={(e) => {
+                const seconds = Math.max(5, Number(e.target.value) || 30);
+                setSettings(prev => ({ ...prev, playerRefreshIntervalMs: seconds * 1000 }));
+              }}
+            />
+            <p className="text-xs text-muted-foreground">Defina com que frequência o player verifica novas mídias.</p>
           </div>
         </CardContent>
       </Card>
