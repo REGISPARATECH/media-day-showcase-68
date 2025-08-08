@@ -20,15 +20,13 @@ interface MediaRendererProps {
   mediaObj: MediaFile;
   onMediaEnd: () => void;
   isPortrait: boolean;
-  muteVideos?: boolean;
 }
 
 export const MediaRenderer: React.FC<MediaRendererProps> = ({ 
   media, 
   mediaObj, 
   onMediaEnd,
-  isPortrait,
-  muteVideos = false
+  isPortrait 
 }) => {
   const [imageDuration] = useState(() => {
     // Duração configurável para imagens (1 a 10 segundos)
@@ -78,33 +76,15 @@ export const MediaRenderer: React.FC<MediaRendererProps> = ({
     onMediaEnd();
   };
 
-  const handleVideoLoadStart = () => {
-    console.log('Iniciando carregamento do vídeo');
-  };
-
-  const handleVideoCanPlay = () => {
-    console.log('Vídeo pronto para reprodução');
-  };
-
   if (getMediaType(mediaObj) === 'video') {
     return (
       <video
         key={media}
         src={media}
         autoPlay
-        muted={muteVideos}
-        playsInline
-        preload="metadata"
+        muted
         onEnded={handleVideoEnd}
-        onLoadStart={handleVideoLoadStart}
-        onCanPlay={handleVideoCanPlay}
-        onError={(e) => {
-          console.error('Erro no vídeo:', e);
-          // Se houver erro, avança para próxima mídia
-          setTimeout(onMediaEnd, 1000);
-        }}
-        className="w-full h-full object-contain transition-opacity duration-300"
-        style={{ maxWidth: '100%', maxHeight: '100%' }}
+        className="max-w-full max-h-full object-contain"
       />
     );
   }
@@ -114,14 +94,7 @@ export const MediaRenderer: React.FC<MediaRendererProps> = ({
       key={media}
       src={media}
       alt="Current media"
-      onLoad={() => console.log('Imagem carregada')}
-      onError={(e) => {
-        console.error('Erro na imagem:', e);
-        // Se houver erro, avança para próxima mídia
-        setTimeout(onMediaEnd, 1000);
-      }}
-      className={`w-full h-full object-contain transition-opacity duration-300 ${getAnimationClass()}`}
-      style={{ maxWidth: '100%', maxHeight: '100%' }}
+      className={`max-w-full max-h-full object-contain ${getAnimationClass()}`}
     />
   );
 };
