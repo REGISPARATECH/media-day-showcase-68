@@ -20,6 +20,7 @@ interface MediaRendererProps {
   mediaObj: MediaFile;
   onMediaEnd: () => void;
   isPortrait: boolean;
+  muted?: boolean;
 }
 
 export const MediaRenderer: React.FC<MediaRendererProps> = ({ 

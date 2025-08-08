@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { Save, Sun, Moon, Eye, EyeOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { settingsService } from '@/services/settingsService';
 
 interface AppSettings {
   theme: 'light' | 'dark';
@@ -42,23 +43,34 @@ export function SettingsManager() {
   const [showApiKeys, setShowApiKeys] = useState(false);
 
   useEffect(() => {
-    // Carregar configurações salvas
-    const savedSettings = localStorage.getItem('appSettings');
-    if (savedSettings) {
-      setSettings(JSON.parse(savedSettings));
-    }
+    const load = async () => {
+      try {
+        const db = await settingsService.getSettings();
+        setSettings(db);
+        document.documentElement.classList.remove('light', 'dark');
+        document.documentElement.classList.add(db.theme);
+      } catch (error) {
+        toast({
+          title: 'Erro',
+          description: 'Erro ao carregar configurações',
+          variant: 'destructive',
+        });
+      }
+    };
+    load();
   }, []);
 
-  const handleSaveSettings = () => {
+  const handleSaveSettings = async () => {
     try {
-      localStorage.setItem('appSettings', JSON.stringify(settings));
+      const saved = await settingsService.saveSettings(settings);
+      setSettings(saved);
       // Aplicar tema imediatamente
       document.documentElement.classList.remove('light', 'dark');
-      document.documentElement.classList.add(settings.theme);
+      document.documentElement.classList.add(saved.theme);
       
       toast({
         title: 'Sucesso',
-        description: 'Configurações salvas com sucesso',
+        description: 'Configurações salvas no servidor',
       });
     } catch (error) {
       toast({

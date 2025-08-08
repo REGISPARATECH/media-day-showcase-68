@@ -3,11 +3,13 @@ import { useState, useRef, useEffect } from "react";
 import Footer from "@/components/layout/Footer";
 import { useSupabaseMediaPlayer } from "@/hooks/useSupabaseMediaPlayer";
 import { MediaRenderer } from "@/components/player/MediaRenderer";
-
+import { settingsService } from "@/services/settingsService";
 const Player = () => {
   const [showMarquee, setShowMarquee] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
-  
+  const [isPortrait, setIsPortrait] = useState<boolean>(typeof window !== 'undefined' && 'matchMedia' in window ? window.matchMedia('(orientation: portrait)').matches : true);
+  const [weather, setWeather] = useState<{ temp: number; desc: string } | null>(null);
+  const [news, setNews] = useState<string[]>([]);
   const [settings, setSettings] = useState(() => {
     const saved = localStorage.getItem('appSettings');
     return saved ? JSON.parse(saved) : {
