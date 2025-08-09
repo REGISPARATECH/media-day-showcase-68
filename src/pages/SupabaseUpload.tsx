@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type ChangeEvent } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -89,6 +89,32 @@ const SupabaseUpload = () => {
 
   const removeFile = (index: number) => {
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleFileSelect = (e: ChangeEvent<HTMLInputElement>) => {
+    try {
+      const fileList = e.target.files ? Array.from(e.target.files) : [];
+      if (fileList.length === 0) return;
+      const MAX_MB = 50;
+      const accepted = fileList.filter((f) => f.size <= MAX_MB * 1024 * 1024);
+      const rejected = fileList.filter((f) => f.size > MAX_MB * 1024 * 1024);
+
+      if (rejected.length > 0) {
+        toast({
+          title: 'Arquivo muito grande',
+          description: `Alguns arquivos excedem ${MAX_MB}MB e foram ignorados: ${rejected.map((r) => r.name).join(', ')}`,
+          variant: 'destructive',
+        });
+      }
+
+      setSelectedFiles((prev) => [...prev, ...accepted]);
+    } catch (err) {
+      console.error('Erro ao selecionar arquivos:', err);
+      toast({ title: 'Erro', description: 'Falha ao selecionar arquivos', variant: 'destructive' });
+    } finally {
+      // permite selecionar o mesmo arquivo novamente
+      if (e.target) e.target.value = '';
+    }
   };
 
   const handleUpload = async () => {
