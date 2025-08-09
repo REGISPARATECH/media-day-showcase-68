@@ -25,6 +25,7 @@ const SupabaseAdmin = () => {
   const [editingClient, setEditingClient] = useState<string | null>(null);
   const [newClient, setNewClient] = useState({ name: '', prefix: '', password: '' });
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<string>('clients');
   const { toast } = useToast();
   const { theme, toggleTheme } = useTheme();
 
@@ -254,7 +255,7 @@ const SupabaseAdmin = () => {
         <div className="max-w-6xl mx-auto">
           <h1 className="text-3xl font-bold mb-6">Administração</h1>
 
-          <Tabs defaultValue="clients" className="w-full">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="clients">Clientes</TabsTrigger>
               <TabsTrigger value="folders">Pastas</TabsTrigger>
