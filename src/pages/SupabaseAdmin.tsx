@@ -21,7 +21,7 @@ const SupabaseAdmin = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [clients, setClients] = useState<Client[]>([]);
   const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([]);
-  const [selectedFolder, setSelectedFolder] = useState<string>('');
+  const [selectedFolder, setSelectedFolder] = useState<string>('all');
   const [editingClient, setEditingClient] = useState<string | null>(null);
   const [newClient, setNewClient] = useState({ name: '', prefix: '', password: '' });
   const [loading, setLoading] = useState(true);
@@ -29,7 +29,7 @@ const SupabaseAdmin = () => {
   const { theme, toggleTheme } = useTheme();
 
   const folders = [
-    { value: '', label: 'Todas as pastas' },
+    { value: 'all', label: 'Todas as pastas' },
     { value: 'todos', label: 'Todos os dias' },
     { value: 'domingo', label: 'Domingo' },
     { value: 'segunda', label: 'Segunda-feira' },
@@ -200,9 +200,9 @@ const SupabaseAdmin = () => {
     }
   };
 
-  const filteredMediaFiles = selectedFolder
-    ? mediaFiles.filter(file => file.folder === selectedFolder)
-    : mediaFiles;
+  const filteredMediaFiles = selectedFolder === 'all'
+    ? mediaFiles
+    : mediaFiles.filter(file => file.folder === selectedFolder);
 
   const getFolderStats = (folder: string) => {
     const folderFiles = mediaFiles.filter(file => file.folder === folder);
@@ -438,7 +438,7 @@ const SupabaseAdmin = () => {
                 <CardHeader>
                   <CardTitle>
                     Arquivos de Mídia ({filteredMediaFiles.length})
-                    {selectedFolder && ` - ${folders.find(f => f.value === selectedFolder)?.label}`}
+                    {selectedFolder !== 'all' && ` - ${folders.find(f => f.value === selectedFolder)?.label}`}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -569,7 +569,7 @@ const SupabaseAdmin = () => {
                     })}
                   </div>
 
-                  {selectedFolder && (
+                  {selectedFolder !== 'all' && (
                     <Card>
                       <CardHeader>
                         <CardTitle>
